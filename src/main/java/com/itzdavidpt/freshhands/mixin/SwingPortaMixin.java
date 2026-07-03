@@ -9,13 +9,6 @@ import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.block.BlockState;
 import net.minecraft.block.Block;
-import net.minecraft.block.DoorBlock;
-import net.minecraft.block.TrapdoorBlock;
-import net.minecraft.block.FenceGateBlock;
-import net.minecraft.block.ChestBlock;
-import net.minecraft.block.BarrelBlock;
-import net.minecraft.block.ButtonBlock;
-import net.minecraft.block.LeverBlock;
 import net.minecraft.util.Hand;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
@@ -53,20 +46,23 @@ public class SwingPortaMixin {
                     BlockHitResult blockHit = (BlockHitResult) hit;
                     BlockState estadoBloco = client.world.getBlockState(blockHit.getBlockPos());
                     Block bloco = estadoBloco.getBlock();
-
-                    // Verifica se o bloco é algo interativo (Porta, Alçapão, Portão, Baú, Barril, Botão ou Alavanca)
-                    boolean eInterativo = bloco instanceof DoorBlock || 
-                                          bloco instanceof TrapdoorBlock || 
-                                          bloco instanceof FenceGateBlock || 
-                                          bloco instanceof ChestBlock || 
-                                          bloco instanceof BarrelBlock || 
-                                          bloco instanceof ButtonBlock || 
-                                          bloco instanceof LeverBlock;
+                    
+                    // Método super seguro: pegamos no nome interno da classe do bloco!
+                    // Assim não importa se o pacote mudou, desde que o nome da classe termine com o que queremos
+                    String nomeClasse = bloco.getClass().getSimpleName();
+                    
+                    boolean eInterativo = nomeClasse.contains("Door") || 
+                                          nomeClasse.contains("Chest") || 
+                                          nomeClasse.contains("Trapdoor") || 
+                                          nomeClasse.contains("Gate") || 
+                                          nomeClasse.contains("Barrel") || 
+                                          nomeClasse.contains("Button") || 
+                                          nomeClasse.contains("Lever");
 
                     if (eInterativo) {
-                        // Ativa a interação (abre o baú, puxa a alavanca, abre a porta, etc.)
+                        // Ativa a interação no jogo
                         client.interactionManager.interactBlock(client.player, Hand.MAIN_HAND, blockHit);
-                        // Reseta a animação para não ficar a clicar infinitamente no mesmo segundo
+                        // Reseta o braço para evitar spam infinito
                         anguloAnimacao = 0.0f; 
                     }
                 }
