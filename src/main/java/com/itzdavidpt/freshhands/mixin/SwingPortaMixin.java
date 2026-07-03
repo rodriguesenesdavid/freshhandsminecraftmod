@@ -1,16 +1,21 @@
 package com.itzdavidpt.freshhands.mixin;
 
 import net.minecraft.client.MinecraftClient;
-import net.minecraft.client.network.AbstractClientPlayerEntity;
 import net.minecraft.client.render.VertexConsumerProvider;
 import net.minecraft.client.render.item.HeldItemRenderer;
 import net.minecraft.client.util.math.MatrixStack;
 import net.minecraft.util.Arm;
-import net.minecraft.util.math.RotationAxis;
 import net.minecraft.util.hit.BlockHitResult;
 import net.minecraft.util.hit.HitResult;
 import net.minecraft.block.BlockState;
+import net.minecraft.block.Block;
 import net.minecraft.block.DoorBlock;
+import net.minecraft.block.TrapdoorBlock;
+import net.minecraft.block.FenceGateBlock;
+import net.minecraft.block.ChestBlock;
+import net.minecraft.block.BarrelBlock;
+import net.minecraft.block.ButtonBlock;
+import net.minecraft.block.LeverBlock;
 import net.minecraft.util.Hand;
 import org.lwjgl.glfw.GLFW;
 import org.spongepowered.asm.mixin.Mixin;
@@ -39,19 +44,30 @@ public class SwingPortaMixin {
 
             if (arm == Arm.RIGHT) {
                 matrices.translate(-0.1F, 0.2F * (anguloAnimacao / 45.0f), -0.3F * (anguloAnimacao / 45.0f));
-                matrices.multiply(RotationAxis.POSITIVE_X.rotationDegrees(-anguloAnimacao));
+                matrices.multiply(net.minecraft.util.math.RotationAxis.POSITIVE_X.rotationDegrees(-anguloAnimacao));
             }
 
             if (anguloAnimacao >= 30.0f) { 
                 HitResult hit = client.crosshairTarget;
-                if (hit != null && hit.getType() == HitResult.Type.BLOCK) {
+                if (hit != null && hit.getType() == net.minecraft.util.hit.HitResult.Type.BLOCK) {
                     BlockHitResult blockHit = (BlockHitResult) hit;
                     BlockState estadoBloco = client.world.getBlockState(blockHit.getBlockPos());
+                    Block bloco = estadoBloco.getBlock();
 
-                    if (estadoBloco.getBlock() instanceof DoorBlock) {
-                        if (!estadoBloco.get(DoorBlock.OPEN)) {
-                            client.interactionManager.interactBlock(client.player, Hand.MAIN_HAND, blockHit);
-                        }
+                    // Verifica se o bloco é algo interativo (Porta, Alçapão, Portão, Baú, Barril, Botão ou Alavanca)
+                    boolean eInterativo = bloco instanceof DoorBlock || 
+                                          bloco instanceof TrapdoorBlock || 
+                                          bloco instanceof FenceGateBlock || 
+                                          bloco instanceof ChestBlock || 
+                                          bloco instanceof BarrelBlock || 
+                                          bloco instanceof ButtonBlock || 
+                                          bloco instanceof LeverBlock;
+
+                    if (eInterativo) {
+                        // Ativa a interação (abre o baú, puxa a alavanca, abre a porta, etc.)
+                        client.interactionManager.interactBlock(client.player, Hand.MAIN_HAND, blockHit);
+                        // Reseta a animação para não ficar a clicar infinitamente no mesmo segundo
+                        anguloAnimacao = 0.0f; 
                     }
                 }
             }
