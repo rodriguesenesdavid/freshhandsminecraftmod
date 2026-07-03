@@ -1,0 +1,27 @@
+name: Compilar Mod Fabric
+on: [push, workflow_dispatch]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Descarregar Codigo
+        uses: actions/checkout@v4
+
+      - name: Configurar Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Dar permissao ao Gradle
+        run: chmod +x gradlew
+
+      - name: Compilar com o Gradle
+        run: ./gradlew build
+
+      - name: Guardar o Ficheiro JAR
+        uses: actions/upload-artifact@v4
+        with:
+          name: Fresh-Hands-JAR
+          path: build/libs/*.jar
